@@ -3,8 +3,10 @@ import { HydratedDocument } from 'mongoose';
 
 export type TimeEntryDocument = HydratedDocument<TimeEntry>;
 
-@Schema()
+@Schema({toObject: {virtuals: true}})
 export class TimeEntry {
+  id: string;
+
   @Prop()
   description: string;
 
