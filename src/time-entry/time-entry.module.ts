@@ -1,3 +1,4 @@
+import { DurationStrategySelectorService } from './duration/duration-strategy-selector.service';
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { TimeEntry, TimeEntrySchema } from "./time-entry.schema";
@@ -11,7 +12,7 @@ import { FixedAmountService } from "./amount/fixed-amount.service";
 import { TimeEntryResultFactory } from "./result.service";
 import { DurationSettingsDataSource } from "./duration/duration-settings.ds";
 import { DurationSettingsStaticDataSource } from "./duration/duration-settings.ds.static";
-import { RoundedDurationService } from "./duration/rounded-duration.service";
+import { DEFAULT_DURATION_ROUND_VALUE, RoundedDurationService } from "./duration/rounded-duration.service";
 
 @Module({
   imports: [MongooseModule.forFeature([{name: TimeEntry.name, schema: TimeEntrySchema}])],
@@ -34,7 +35,21 @@ import { RoundedDurationService } from "./duration/rounded-duration.service";
     useClass: DurationSettingsStaticDataSource
   },
   ExactDurationService,
-  RoundedDurationService
+  {
+    provide: DEFAULT_DURATION_ROUND_VALUE,
+    useValue: 30
+  },
+  RoundedDurationService,
+  {
+    provide: DurationStrategySelectorService,
+    useFactory: (exact, rounded) => {
+      const srv = new DurationStrategySelectorService();
+      srv.addStrategy('exact', exact);
+      srv.addStrategy('rounded', rounded);
+      return srv;
+    },
+    inject: [ExactDurationService, RoundedDurationService]
+  }
 ]
 })
 

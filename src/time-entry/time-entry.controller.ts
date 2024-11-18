@@ -13,28 +13,29 @@ import { TimeEntry } from './time-entry.schema';
 import { CalculatedTimeEntry } from './time-entry.entity';
 import { CreateTimeEntryDTO } from './time-entry.dto';
 import { TimeEntryDataSource } from './datasource/time-entry.ds';
-import { DurationService } from './duration/duration.service';
 import { AmountService } from './amount/amount.service';
 import { TimeEntryResultFactory } from './result.service';
 import { DurationSettingsDataSource } from './duration/duration-settings.ds';
-import { ExactDurationService } from './duration/exact-duration.service';
-import { RoundedDurationService } from './duration/rounded-duration.service';
+import { DurationStrategySelectorService } from './duration/duration-strategy-selector.service';
 
 @Controller('time-entries')
 export class TimeEntryController {
   constructor(
     private readonly timeEntryDs: TimeEntryDataSource,
-    private readonly durationSrv: DurationService,
     private readonly amountSrv: AmountService,
     private readonly resultFactoryProvider: TimeEntryResultFactory,
-    private readonly durationSettingsSrv: DurationSettingsDataSource
+    private readonly durationSettingsSrv: DurationSettingsDataSource,
+    private readonly durationStrategySelector: DurationStrategySelectorService
   ) {}
 
   @Get()
   async list(): Promise<CalculatedTimeEntry[]> {
     const list: TimeEntry[] = await this.timeEntryDs.find();
 
-    const resultFactory = this.resultFactoryProvider.getFactory(this.durationSrv, this.amountSrv);
+    const durationSettings = await this.durationSettingsSrv.getDurationSettings();
+    const durationSrv = this.durationStrategySelector.getStrategy(durationSettings.strategy);
+
+    const resultFactory = this.resultFactoryProvider.getFactory(durationSrv, this.amountSrv);
     return list.map((e) => {
       return resultFactory(e);
     });
@@ -48,17 +49,7 @@ export class TimeEntryController {
     }
 
     const durationSettings = await this.durationSettingsSrv.getDurationSettings();
-
-    let durationSrv: DurationService;
-
-    switch (durationSettings.strategy) {
-      case 'rounded':
-        durationSrv = new RoundedDurationService();
-        break
-      default:
-        durationSrv = new ExactDurationService();
-    }
-
+    const durationSrv = this.durationStrategySelector.getStrategy(durationSettings.strategy);
 
     const resultFactory = this.resultFactoryProvider.getFactory(durationSrv, this.amountSrv);
     return resultFactory(record);
@@ -68,8 +59,11 @@ export class TimeEntryController {
   @UsePipes(new ValidationPipe({transform: true}))
   async create(@Body() createTimeEntryDTO: CreateTimeEntryDTO) {
     const record: TimeEntry = await this.timeEntryDs.create(createTimeEntryDTO);
-  
-    const resultFactory = this.resultFactoryProvider.getFactory(this.durationSrv, this.amountSrv);
+
+    const durationSettings = await this.durationSettingsSrv.getDurationSettings();
+    const durationSrv = this.durationStrategySelector.getStrategy(durationSettings.strategy);
+
+    const resultFactory = this.resultFactoryProvider.getFactory(durationSrv, this.amountSrv);
     return resultFactory(record);
   }
 }
