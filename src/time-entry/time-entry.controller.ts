@@ -16,6 +16,9 @@ import { TimeEntryDataSource } from './datasource/time-entry.ds';
 import { DurationService } from './duration/duration.service';
 import { AmountService } from './amount/amount.service';
 import { TimeEntryResultFactory } from './result.service';
+import { DurationSettingsDataSource } from './duration/duration-settings.ds';
+import { ExactDurationService } from './duration/exact-duration.service';
+import { RoundedDurationService } from './duration/rounded-duration.service';
 
 @Controller('time-entries')
 export class TimeEntryController {
@@ -23,7 +26,8 @@ export class TimeEntryController {
     private readonly timeEntryDs: TimeEntryDataSource,
     private readonly durationSrv: DurationService,
     private readonly amountSrv: AmountService,
-    private readonly resultFactoryProvider: TimeEntryResultFactory
+    private readonly resultFactoryProvider: TimeEntryResultFactory,
+    private readonly durationSettingsSrv: DurationSettingsDataSource
   ) {}
 
   @Get()
@@ -43,7 +47,20 @@ export class TimeEntryController {
       throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     }
 
-    const resultFactory = this.resultFactoryProvider.getFactory(this.durationSrv, this.amountSrv);
+    const durationSettings = await this.durationSettingsSrv.getDurationSettings();
+
+    let durationSrv: DurationService;
+
+    switch (durationSettings.strategy) {
+      case 'rounded':
+        durationSrv = new RoundedDurationService();
+        break
+      default:
+        durationSrv = new ExactDurationService();
+    }
+
+
+    const resultFactory = this.resultFactoryProvider.getFactory(durationSrv, this.amountSrv);
     return resultFactory(record);
   }
 

@@ -9,6 +9,9 @@ import { ExactDurationService } from "./duration/exact-duration.service";
 import { AmountService } from "./amount/amount.service";
 import { FixedAmountService } from "./amount/fixed-amount.service";
 import { TimeEntryResultFactory } from "./result.service";
+import { DurationSettingsDataSource } from "./duration/duration-settings.ds";
+import { DurationSettingsStaticDataSource } from "./duration/duration-settings.ds.static";
+import { RoundedDurationService } from "./duration/rounded-duration.service";
 
 @Module({
   imports: [MongooseModule.forFeature([{name: TimeEntry.name, schema: TimeEntrySchema}])],
@@ -25,7 +28,13 @@ import { TimeEntryResultFactory } from "./result.service";
     provide: AmountService,
     useClass: FixedAmountService
   },
-  TimeEntryResultFactory
+  TimeEntryResultFactory,
+  {
+    provide: DurationSettingsDataSource,
+    useClass: DurationSettingsStaticDataSource
+  },
+  ExactDurationService,
+  RoundedDurationService
 ]
 })
 
