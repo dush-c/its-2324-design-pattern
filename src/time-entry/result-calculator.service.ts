@@ -25,7 +25,7 @@ export class TimeEntryResultCalculatorService {
     const amountSettings = await this.amountSettingSrv.getAmountSettings(userId);
 
     let amountSrv: AmountService;
-    if (durationSrv.getDuration(record.start, record.end) < amountSettings.minDuration) {
+    if (durationSrv.getMinutes(record.start, record.end) < amountSettings.minDuration) {
       amountSrv = new FixedAmountService(0);
     } else {
       amountSrv = new FixedAmountService(amountSettings.hourlyRate);

@@ -9,10 +9,8 @@ export class RoundedDurationService extends DurationService {
     super();
   }
 
-  getDuration(start: Date, end: Date): number {
-    const millis = end.getTime() - start.getTime();
-    const minutes = millis / (60 * 1000);
-    const rounded = Math.round(minutes / this.roundValue) * this.roundValue;
-    return rounded / 60;
+  calcDuration(millis: number): number {
+    const roundMillis = this.roundValue * 1000 * 60;
+    return Math.round(millis / roundMillis) * roundMillis;
   }
 }
