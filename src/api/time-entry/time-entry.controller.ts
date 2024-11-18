@@ -9,11 +9,8 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { TimeEntry } from './time-entry.schema';
-import { CalculatedTimeEntry } from './time-entry.entity';
-import { CreateTimeEntryDTO } from './time-entry.dto';
-import { TimeEntryDataSource } from './datasource/time-entry.ds';
 import { TimeEntryResultCalculatorService } from './result-calculator.service';
+import { TimeEntryDataSource, CalculatedTimeEntry, TimeEntry, CreateTimeEntryDTO } from '@modules/time-entry';
 
 const FAKE_USER = '1234';
 
@@ -28,10 +25,7 @@ export class TimeEntryController {
   async list(): Promise<CalculatedTimeEntry[]> {
     const list: TimeEntry[] = await this.timeEntryDs.find();
     
-    const promises =  list.map((e) => {
-      return this.resultCalculatorSrv.calcResult(FAKE_USER, e);
-    });
-    return Promise.all(promises);
+    return this.resultCalculatorSrv.calcResult(FAKE_USER, list);
   }
 
   @Get(':id')

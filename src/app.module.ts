@@ -2,14 +2,50 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { TimeEntryModule } from './time-entry/time-entry.module';
+import { TimeEntryApiModule } from './api/time-entry/time-entry.module';
+import { DurationSettingsModule, DurationSettingsDataSource, DurationSettingsStaticDataSource } from '@modules/duration/duration-settings';
+import { DEFAULT_DURATION_ROUND_VALUE, DurationStrategyModule, DurationStrategySelectorService, ExactDurationService, RoundedDurationService } from '@modules/duration/duration-strategy';
+import { AmountSettingsDataSource, AmountSettingsModule, AmountSettingsStaticDataSource } from '@modules/amount/amount-settings';
+import { TimeEntryDataSource, TimeEntryModule, TimeEntryMongoDataSource } from '@modules/time-entry';
 
 @Module({
   imports: [
     MongooseModule.forRoot('mongodb://localhost/time-tracker-2024'),
-    TimeEntryModule
+    DurationSettingsModule.forRoot([{
+      provide: DurationSettingsDataSource,
+      useClass: DurationSettingsStaticDataSource
+    }]),
+    AmountSettingsModule.forRoot([
+      {
+        provide: AmountSettingsDataSource,
+        useClass: AmountSettingsStaticDataSource
+      }
+    ]),
+    DurationStrategyModule,
+    TimeEntryModule.forRoot([{
+      provide: TimeEntryDataSource,
+      useClass: TimeEntryMongoDataSource
+    }]),
+    TimeEntryApiModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    ExactDurationService,
+    {
+      provide: DEFAULT_DURATION_ROUND_VALUE,
+      useValue: 30
+    },
+    RoundedDurationService
+  ],
 })
-export class AppModule {}
+export class AppModule {
+  constructor(
+    durationStrategySrv: DurationStrategySelectorService,
+    exact: ExactDurationService,
+    rounded: RoundedDurationService
+  ) {
+    durationStrategySrv.addStrategy('exact', exact);
+    durationStrategySrv.addStrategy('rounded', rounded);
+  }
+}

@@ -1,16 +1,12 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TimeEntryController } from "./time-entry.controller";
-import { TimeEntryDataSource } from "./datasource/time-entry.ds";
-import { TimeEntryMockDataSource } from "./datasource/time-entry.ds.mock.service";
 import { Types } from "mongoose";
-import { TimeEntry } from "./time-entry.schema";
-import { ExactDurationService } from "./duration/exact-duration.service";
 import { AmountService } from "./amount/amount.service";
 import { FixedAmountService } from "./amount/fixed-amount.service";
 import { TimeEntryResultFactory } from "./result.service";
-import { DurationSettingsDataSource } from "./duration/duration-settings.ds";
-import { DurationSettingsStaticDataSource } from "./duration/duration-settings.ds.static";
-import { DurationStrategySelectorService } from "./duration/duration-strategy-selector.service";
+import { DurationSettingsDataSource, DurationSettingsStaticDataSource } from "@modules/duration/duration-settings";
+import { DurationStrategySelectorService, ExactDurationService } from "@modules/duration/duration-strategy";
+import { TimeEntryMockDataSource, TimeEntryDataSource, TimeEntry } from "@modules/time-entry";
 describe('TimeEntryController', () => {
   let controller: TimeEntryController;
   let dataSource: TimeEntryMockDataSource;
