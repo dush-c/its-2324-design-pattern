@@ -39,10 +39,10 @@ export class TimeEntryResultCalculatorService {
     const items = isArray ? record : [record];
 
     const durationSrv = await this.getDurationService(userId);
-    const amountSettings = await this.amountSettingSrv.getAmountSettings(userId);
-
+    
     const results: TimeEntryResultDTO[] = [];
     for (const item of items) {
+      const amountSettings = await this.amountSettingSrv.getAmountSettings(item.id);
       const amountSrv = await this.getAmountService(item, amountSettings, durationSrv);
       
       const resultFactory = this.resultFactoryProvider.getFactory(durationSrv, amountSrv);
